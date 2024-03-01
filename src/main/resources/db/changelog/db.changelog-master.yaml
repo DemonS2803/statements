@@ -1,0 +1,124 @@
+databaseChangeLog:
+  - logicalFilePath: db/changelog/db.changelog-lesson1.yaml
+  - changeSet:
+      id: "1"
+      author: your_liquibase_username
+      changes:
+        - createTable:
+            tableName: users
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: login
+                  type: varchar(50)
+                  constraints:
+                    unique: true
+                    nullable: false
+              - column:
+                  name: password
+                  type: varchar(512)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: first_name
+                  type: varchar(50)
+              - column:
+                  name: last_name
+                  type: varchar(50)
+              - column:
+                  name: role
+                  type: varchar(50)
+              - column:
+                  name: phone
+                  type: varchar(100)
+        - createTable:
+            tableName: statements
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: title
+                  type: varchar(500)
+                  constraints:
+                    unique: true
+                    nullable: false
+              - column:
+                  name: content
+                  type: varchar(10000)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: sender_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created
+                  type: timestamp
+                  constraints:
+                    nullable: false
+              - column:
+                  name: closed
+                  type: timestamp
+              - column:
+                  name: sender_name
+                  type: varchar(50)
+              - column:
+                  name: country_code
+                  type: smallint
+              - column:
+                  name: city_code
+                  type: smallint
+              - column:
+                  name: phone
+                  type: varchar(100)
+  - changeSet:
+      id: "2"
+      author: your_liquibase_username
+      comment: "Create admin user"
+      changes:
+        - insert:
+            tableName: users
+            columns:
+              - column:
+                  name: login
+                  value: "admin"
+              - column:
+                  name: password
+                  value: "admin"
+              - column:
+                  name: role
+                  value: "ADMIN"
+        - insert:
+            tableName: users
+            columns:
+              - column:
+                  name: login
+                  value: "user"
+              - column:
+                  name: password
+                  value: "user"
+              - column:
+                  name: role
+                  value: "USER"
+      rollback:
+        - delete:
+            tableName: users
+            where: username in ('admin', 'guest')
+          
