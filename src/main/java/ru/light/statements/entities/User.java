@@ -11,12 +11,14 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import ru.light.statements.enums.UserRole;
 
 @Entity
 @Data
+@Builder
 @Table(name = "users")
 @AllArgsConstructor
 @NoArgsConstructor
@@ -34,4 +36,6 @@ public class User {
     @Transient
     private List<Statement> statements;
     private String phone;
+    // по-хорошему в redis перенести
+    private String refreshToken;
 }

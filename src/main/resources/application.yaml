@@ -18,3 +18,26 @@ spring:
     username: postgres
     password: postgres
     driver-class-name: org.postgresql.Driver
+  
+  cloud:
+    loadbalancer:
+       ribbon:
+        enable: false
+
+jwt:
+  header:
+    Authorization
+  secret:
+    light
+  time:
+   #min
+    access-expired:
+      100
+    refresh-expired:
+      30000
+    accept:
+      300
+  issuer:
+    app
+
+  

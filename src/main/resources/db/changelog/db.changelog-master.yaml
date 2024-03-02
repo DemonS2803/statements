@@ -37,6 +37,9 @@ databaseChangeLog:
               - column:
                   name: phone
                   type: varchar(100)
+              - column:
+                  name: refresh_token
+                  type: varchar(400)
         - createTable:
             tableName: statements
             columns:
@@ -51,7 +54,6 @@ databaseChangeLog:
                   name: title
                   type: varchar(500)
                   constraints:
-                    unique: true
                     nullable: false
               - column:
                   name: content
@@ -101,7 +103,7 @@ databaseChangeLog:
                   value: "admin"
               - column:
                   name: password
-                  value: "admin"
+                  value: "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8"
               - column:
                   name: role
                   value: "ADMIN"
@@ -113,7 +115,7 @@ databaseChangeLog:
                   value: "user"
               - column:
                   name: password
-                  value: "user"
+                  value: "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8"
               - column:
                   name: role
                   value: "USER"
