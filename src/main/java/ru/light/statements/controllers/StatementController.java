@@ -2,6 +2,7 @@ package ru.light.statements.controllers;
 
 import java.util.ArrayList;
 
+import org.bouncycastle.jcajce.provider.asymmetric.dsa.DSASigner.stdDSA;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
@@ -83,9 +84,20 @@ public class StatementController {
 
     // показалось, что проще уже новый url создать
     @GetMapping("/get/by_user/{id}")
-    public ResponseEntity<?> getStatementByUserId(@PathVariable("id") Long userId) {
+    public ResponseEntity<?> getStatementByUserId(@PathVariable("id") Long userId,
+                                                  @RequestParam(value = "creation_sort_direct", defaultValue = "ASC") Sort.Direction creationSortDirection,
+                                                  @RequestParam(value = "offset", defaultValue = "0") Integer offset,
+                                                  @RequestParam(value = "limit", defaultValue = "5") Integer limit) {
         User user = userService.getUserByLogin(((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername());
-        return new ResponseEntity<>(HttpStatus.OK);
+        ArrayList<Statement> list = new ArrayList<>();
+        if (user.getRole().equals(UserRole.OPERATOR)) {
+            list = statementService.getSendStatementsByUserId(userId, offset, limit, creationSortDirection);
+        } else if (user.getRole().equals(UserRole.ADMIN)) {
+            list = statementService.getNotDraftStatementsByUserId(userId, offset, limit, creationSortDirection);
+        }
+                
+        log.info("user " + user.getLogin() + " got information about user #" + userId + " statements");                                            
+        return new ResponseEntity<>(list, HttpStatus.OK);
     }
 
     @PostMapping("/edit")

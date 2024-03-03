@@ -140,4 +140,14 @@ public class StatementService {
         return statement;
     }
 
+    public ArrayList<Statement> getNotDraftStatementsByUserId(Long userId, Integer offset, Integer limit, Sort.Direction sortDirection) {
+        PageRequest pageRequest = PageRequest.of(offset, limit, Sort.by(sortDirection, "created"));
+        return (ArrayList<Statement>) statementRepository.findStatementBySenderIdAndStatusNot(userId, StatementStatus.DRAFT, pageRequest);
+    }
+
+    public ArrayList<Statement> getSendStatementsByUserId(Long userId, Integer offset, Integer limit, Sort.Direction sortDirection) {
+        PageRequest pageRequest = PageRequest.of(offset, limit, Sort.by(sortDirection, "created"));
+        return (ArrayList<Statement>) statementRepository.findStatementBySenderIdAndStatus(userId, StatementStatus.SEND, pageRequest);
+    }
+
 }

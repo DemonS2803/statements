@@ -16,6 +16,7 @@ public interface StatementRepository extends JpaRepository<Statement, Long> {
     List<Statement> findStatementBySenderId(Long senderId);
     List<Statement> findStatementBySenderId(Long senderId, PageRequest pageRequest);
     List<Statement> findStatementBySenderIdAndStatus(Long senderId, StatementStatus status, PageRequest pageRequest);
+    List<Statement> findStatementBySenderIdAndStatusNot(Long senderId, StatementStatus status, PageRequest pageRequest);
     List<Statement> findStatementByStatus(StatementStatus status, PageRequest pageRequest);
     List<Statement> findStatementBySenderNameLike(String senderName, PageRequest pageRequest);
     List<Statement> findStatementByStatusAndSenderNameLike(StatementStatus status, String senderNamePart, PageRequest pageRequest);
