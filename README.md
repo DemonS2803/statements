@@ -1,8 +1,9 @@
 
 Этот проект - тестовое задание для LightDigital
 
-Сделал согласно ТЗ. Написал тесты для удобства проверки
+Сделал согласно ТЗ. 
 Для запуска - настройте подключение к БД в src/main/resources/application.yaml
+Написал тесты для удобства проверки в src/test/java/ru/light/statements/StatementsServiceApplicationTests.java
 
 Эндпоинты и примеры запросов
 
