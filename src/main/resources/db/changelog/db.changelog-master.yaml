@@ -93,7 +93,7 @@ databaseChangeLog:
   - changeSet:
       id: "2"
       author: your_liquibase_username
-      comment: "Create admin user"
+      comment: "Create admin user oper"
       changes:
         - insert:
             tableName: users
@@ -159,6 +159,27 @@ databaseChangeLog:
                   name: last_name
                   value: "Сытько"
         - insert:
+            tableName: users
+            columns:
+              - column:
+                  name: id
+                  value: "4"
+              - column:
+                  name: login
+                  value: "user2"
+              - column:
+                  name: password
+                  value: "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8"
+              - column:
+                  name: role
+                  value: "USER"
+              - column:
+                  name: first_name
+                  value: "Петя"
+              - column:
+                  name: last_name
+                  value: "Умный"
+        - insert:
             tableName: statements
             columns:
               - column:
@@ -182,6 +203,39 @@ databaseChangeLog:
               - column:
                   name: sender_name
                   value: "Иванов Иван"
+              - column:
+                  name: country_code
+                  value: "7"
+              - column:
+                  name: city_code
+                  value: "917"
+              - column:
+                  name: phone
+                  value: "+7 917 146-49-49"
+        - insert:
+            tableName: statements
+            columns:
+              - column:
+                  name: id
+                  value: "2"
+              - column:
+                  name: title
+                  value: "test2"
+              - column:
+                  name: content
+                  value: "test2"
+              - column:
+                  name: status
+                  value: "DRAFT"
+              - column:
+                  name: sender_id
+                  value: "4"
+              - column:
+                  name: created
+                  value: "2024-03-03 11:11:51.578253"
+              - column:
+                  name: sender_name
+                  value: "Петя Умный"
               - column:
                   name: country_code
                   value: "7"

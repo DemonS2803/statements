@@ -40,16 +40,10 @@ public class SecurityConfiguration {
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity
                 .authorizeHttpRequests((authz) -> authz
-//                        .requestMatchers("/*").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
-                        // .requestMatchers("/api/statement/**").permitAll()
                         .requestMatchers("/api/statement/edit", "/api/statement/send/**").hasAuthority(UserRole.USER.name())
-                        // .requestMatchers("/api/statement/send").hasAuthority(UserRole.USER.name())
-                        .requestMatchers("/api/statement/status/**").hasAuthority(UserRole.OPERATOR.name())
-
-                        .requestMatchers("/api/admin/**").hasAnyAuthority(UserRole.ADMIN.name())
-                        // .requestMatchers("/api/operator/**").hasAnyRole(UserRole.OPERATOR.name(), UserRole.ADMIN.name())
-                        // .requestMatchers("/api/user/**").hasAnyRole(UserRole.USER.name(), UserRole.ADMIN.name())
+                        .requestMatchers("/api/statement/status/**", "/api/statement/get/by_user/**").hasAuthority(UserRole.OPERATOR.name())
+                        .requestMatchers("/api/admin/**", "/api/statement/get/by_user/**").hasAuthority(UserRole.ADMIN.name())
                         .anyRequest().authenticated()
                 )
                 .httpBasic(Customizer.withDefaults())

@@ -26,6 +26,8 @@ import ru.light.statements.entities.Statement;
 import ru.light.statements.entities.User;
 import ru.light.statements.enums.StatementStatus;
 import ru.light.statements.enums.UserRole;
+import ru.light.statements.exceptions.UpdateStatementError;
+import ru.light.statements.exceptions.UserHaveNoPermissionError;
 import ru.light.statements.services.StatementService;
 import ru.light.statements.services.UserService;
 
@@ -53,7 +55,6 @@ public class StatementController {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
         return new ResponseEntity<>(statement, HttpStatus.OK);
-
     }
 
     @GetMapping("/get")
@@ -63,21 +64,28 @@ public class StatementController {
                                            @RequestParam(value = "offset", defaultValue = "0") Integer offset,
                                            @RequestParam(value = "limit", defaultValue = "5") Integer limit) {
         User user = userService.getUserByLogin(((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername());
-        
+        log.info("get statements: " + user);
         ArrayList<Statement> statementsList = new ArrayList<>();
         switch (user.getRole()) {
             case USER:
                 statementsList = statementService.getStatementsByUserId(user.getId(), limit, offset, creationSortDirection, statementStatusString);
                 break;
             case OPERATOR:
-                statementsList = statementService.getSendStatements(limit, offset, creationSortDirection);
+                statementsList = statementService.getSendStatements(limit, offset, creationSortDirection, creatorNamePart);
                 break;
             case ADMIN:
                 statementsList = statementService.getStatements(limit, offset, creationSortDirection, statementStatusString, creatorNamePart);
                 break;
         }
-
+        log.info(statementsList.toString());
         return new ResponseEntity<>(statementsList, HttpStatus.OK);
+    }
+
+    // показалось, что проще уже новый url создать
+    @GetMapping("/get/by_user/{id}")
+    public ResponseEntity<?> getStatementByUserId(@PathVariable("id") Long userId) {
+        User user = userService.getUserByLogin(((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername());
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @PostMapping("/edit")
@@ -96,41 +104,85 @@ public class StatementController {
     }
 
     @PutMapping("/edit") 
-    public ResponseEntity<?> editStatement(@RequestBody @Validated UpdateStatementDTO statement) {
+    public ResponseEntity<?> editStatement(@RequestBody @Validated UpdateStatementDTO statementDTO) {
         User user = userService.getUserByLogin(((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername());
         log.info(user.getLogin() + " in put edit");
         try {
-            statementService.update(statement);
+            Statement statement = statementService.getStatement(statementDTO.getId());
+
+            if (!userService.hasUserPermissionToEdit(user, statementService.getStatement(statementDTO.getId()))) {
+                throw new UserHaveNoPermissionError();
+            }
+            if (!statement.getStatus().equals(StatementStatus.DRAFT)) {
+                throw new UpdateStatementError();
+            }
+
+            statementService.update(statementDTO);
             return new ResponseEntity<>(HttpStatus.OK);
         } catch (Exception e) {
-            log.error("error while editing statement", e);
+            log.error("error while editing statement " + e.getMessage());
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
         }
     }
 
     @PutMapping("/send/{id}")
     public ResponseEntity<?> sendStatement(@PathVariable("id") Long statementId) {
-        User user = userService.getUserByLogin(((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername());
-        statementService.changeStatus(statementId, StatementStatus.SEND);
-        log.info("user " + user.getLogin() + " send statement " + statementId);
-        return new ResponseEntity<>(HttpStatus.OK);
+        try {
+            User user = userService.getUserByLogin(((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername());
+            Statement statement = statementService.getStatement(statementId);
+            
+            if (!userService.hasUserPermissionToEdit(user, statement)) {
+                throw new UserHaveNoPermissionError();
+            }  
+            if (!statement.getStatus().equals(StatementStatus.DRAFT)) {
+                throw new UpdateStatementError();
+            }
 
+            statementService.changeStatus(statementId, StatementStatus.SEND);
+            log.info("user " + user.getLogin() + " send statement " + statementId);
+            return new ResponseEntity<>(HttpStatus.OK);
+        } catch (Exception e) {
+            log.error("error while sending statement " + e.getMessage());
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        }
     }
 
     @PutMapping("/status/accept/{statementId}")
     public ResponseEntity<?> acceptStatement(@PathVariable("statementId") Long statementId) {
-        User user = userService.getUserByLogin(((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername());
-        statementService.changeStatus(statementId, StatementStatus.ACCEPTED);
-        log.info("operator " + user.getLogin() + " accepted statement " + statementId);
-        return new ResponseEntity<>(HttpStatus.OK);
+        try {
+            User user = userService.getUserByLogin(((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername());
+            
+            Statement statement = statementService.getStatement(statementId);
+            if (!statement.getStatus().equals(StatementStatus.SEND)) {
+                throw new UpdateStatementError();
+            }
+            
+            statementService.changeStatus(statementId, StatementStatus.ACCEPTED);
+            log.info("operator " + user.getLogin() + " accepted statement " + statementId);
+            return new ResponseEntity<>(HttpStatus.OK);
+        } catch (Exception e) {
+            log.error("error while accepting statement " + e.getMessage());
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        }
     }
 
     @PutMapping("/status/reject/{statementId}")
     public ResponseEntity<?> rejectStatement(@PathVariable("statementId") Long statementId) {
-        User user = userService.getUserByLogin(((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername());
-        statementService.changeStatus(statementId, StatementStatus.REJECTED);
-        log.info("operator " + user.getLogin() + " rejected statement " + statementId);
-        return new ResponseEntity<>(HttpStatus.OK);
+        try {
+            User user = userService.getUserByLogin(((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername());
+            
+            Statement statement = statementService.getStatement(statementId);
+            if (!statement.getStatus().equals(StatementStatus.SEND)) {
+                throw new UpdateStatementError();
+            }
+            
+            statementService.changeStatus(statementId, StatementStatus.REJECTED);
+            log.info("operator " + user.getLogin() + " rejected statement " + statementId);
+            return new ResponseEntity<>(HttpStatus.OK);
+        } catch (Exception e) {
+            log.error("error while rejecting statement " + e.getMessage());
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        }
     }
     
 }

@@ -86,6 +86,9 @@ public class AuthController {
         return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
     }
     
+
+    // не до конца понял смысл этой кнопки, но сделал так, что она чистит refresh
+    // c access токеном ничего не поделать. Когда-нибудь истечет
     @PostMapping("/logout")
     public ResponseEntity<?> logout() {
         User user = userService.getUserByLogin(((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername());

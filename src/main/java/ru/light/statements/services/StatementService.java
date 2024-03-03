@@ -2,7 +2,6 @@ package ru.light.statements.services;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
@@ -21,7 +20,6 @@ import ru.light.statements.dto.UpdateStatementDTO;
 import ru.light.statements.entities.Statement;
 import ru.light.statements.entities.User;
 import ru.light.statements.enums.StatementStatus;
-import ru.light.statements.exceptions.CreateStatementError;
 import ru.light.statements.exceptions.UpdateStatementError;
 import ru.light.statements.repositories.StatementRepository;
 
@@ -64,11 +62,17 @@ public class StatementService {
             log.error("error while updating statement " + statement);
             throw new UpdateStatementError();
         }
+        System.out.println(dto);
         statement.setTitle(dto.getTitle());
         statement.setContent(dto.getContent());
         statement.setSenderName(dto.getSenderName());
         
-        if (dto.getPhone() != null && !statement.getPhone().equals(dto.getPhone())) {
+        if (dto.getPhone() != null) {
+
+            // номера с +7 он почему то в ошибку выкидывает
+            if (dto.getPhone().startsWith("+7")) {
+                dto.setPhone(dto.getPhone().replace("+7", "8"));
+            }
             String data = dadataAPI.getPhoneData(DadataAPI.dadataToken, DadataAPI.dadataSecret, "[" + dto.getPhone() + "]");
             ObjectMapper mapper = new ObjectMapper();
             System.out.println(data);
@@ -102,9 +106,10 @@ public class StatementService {
 
     public ArrayList<Statement> getSendStatements(Integer limit, 
                                                   Integer offset, 
-                                                  Sort.Direction sortDirection) {
+                                                  Sort.Direction sortDirection,
+                                                  String userNamePart) {
         PageRequest pageRequest = PageRequest.of(offset, limit, Sort.by(sortDirection, "created"));
-        return (ArrayList<Statement>) statementRepository.findStatementByStatus(StatementStatus.SEND, pageRequest);
+        return (ArrayList<Statement>) statementRepository.findStatementByStatusAndSenderNameLike(StatementStatus.SEND, "%" + userNamePart +"%", pageRequest);
     }
 
     public ArrayList<Statement> getStatements(Integer limit, 
@@ -122,7 +127,11 @@ public class StatementService {
 
     public Statement changeStatus(Long statementId, StatementStatus newStatus) {
         Statement statement = statementRepository.findStatementById(statementId);
+        // if (newStatus.ordinal() < statement.getStatus().ordinal()) {
+        //     throw new UpdateStatementError();
+        // }
         statement.setStatus(newStatus);
+        
         if (newStatus.equals(StatementStatus.ACCEPTED) || newStatus.equals(StatementStatus.REJECTED)) {
             statement.setClosed(LocalDateTime.now());
         }
