@@ -2,6 +2,9 @@ package ru.light.statements.entities;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -20,6 +23,7 @@ import ru.light.statements.enums.UserRole;
 @Data
 @Builder
 @Table(name = "users")
+@JsonInclude(JsonInclude.Include.NON_NULL)
 @AllArgsConstructor
 @NoArgsConstructor
 public class User {
@@ -28,6 +32,7 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String login;
+    @JsonIgnore
     private String password;
     private String firstName;
     private String lastName;
@@ -37,5 +42,6 @@ public class User {
     private List<Statement> statements;
     private String phone;
     // по-хорошему в redis перенести
+    @JsonIgnore
     private String refreshToken;
 }

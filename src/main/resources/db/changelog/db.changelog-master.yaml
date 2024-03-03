@@ -99,6 +99,9 @@ databaseChangeLog:
             tableName: users
             columns:
               - column:
+                  name: id
+                  value: "1"
+              - column:
                   name: login
                   value: "admin"
               - column:
@@ -107,9 +110,18 @@ databaseChangeLog:
               - column:
                   name: role
                   value: "ADMIN"
+              - column:
+                  name: first_name
+                  value: "Иван"
+              - column:
+                  name: last_name
+                  value: "Иванов"
         - insert:
             tableName: users
             columns:
+              - column:
+                  name: id
+                  value: "2"
               - column:
                   name: login
                   value: "user"
@@ -119,6 +131,66 @@ databaseChangeLog:
               - column:
                   name: role
                   value: "USER"
+              - column:
+                  name: first_name
+                  value: "Леша"
+              - column:
+                  name: last_name
+                  value: "Григорьев"
+        - insert:
+            tableName: users
+            columns:
+              - column:
+                  name: id
+                  value: "3"
+              - column:
+                  name: login
+                  value: "oper"
+              - column:
+                  name: password
+                  value: "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8"
+              - column:
+                  name: role
+                  value: "OPERATOR"
+              - column:
+                  name: first_name
+                  value: "Василич"
+              - column:
+                  name: last_name
+                  value: "Сытько"
+        - insert:
+            tableName: statements
+            columns:
+              - column:
+                  name: id
+                  value: "1"
+              - column:
+                  name: title
+                  value: "test"
+              - column:
+                  name: content
+                  value: "test"
+              - column:
+                  name: status
+                  value: "DRAFT"
+              - column:
+                  name: sender_id
+                  value: "2"
+              - column:
+                  name: created
+                  value: "2024-03-03 11:11:51.578253"
+              - column:
+                  name: sender_name
+                  value: "Иванов Иван"
+              - column:
+                  name: country_code
+                  value: "7"
+              - column:
+                  name: city_code
+                  value: "917"
+              - column:
+                  name: phone
+                  value: "+7 917 146-49-49"
       rollback:
         - delete:
             tableName: users

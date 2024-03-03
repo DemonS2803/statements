@@ -1,16 +1,18 @@
 package ru.light.statements.dto;
 
-import java.util.ArrayList;
-
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class DadataResponseDTO {
+public class UpdateStatementDTO {
     
-    ArrayList<PhoneDataDTO> list;
+    private Long id;
+    private String title;
+    private String content;
+    private String senderName;
+    private String phone;
+    
 }

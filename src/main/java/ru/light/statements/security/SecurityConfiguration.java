@@ -42,11 +42,12 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests((authz) -> authz
 //                        .requestMatchers("/*").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
-                        // .requestMatchers("/api/statement/**").hasAnyRole(UserRole.ADMIN.name(), UserRole.OPERATOR.name(), UserRole.USER.name())
-                        .requestMatchers("/api/statement/edit").hasAuthority(UserRole.USER.name())
+                        // .requestMatchers("/api/statement/**").permitAll()
+                        .requestMatchers("/api/statement/edit", "/api/statement/send/**").hasAuthority(UserRole.USER.name())
+                        // .requestMatchers("/api/statement/send").hasAuthority(UserRole.USER.name())
                         .requestMatchers("/api/statement/status/**").hasAuthority(UserRole.OPERATOR.name())
 
-                        // .requestMatchers("/api/admin/**").hasAuthority(UserRole.ADMIN.name())
+                        .requestMatchers("/api/admin/**").hasAnyAuthority(UserRole.ADMIN.name())
                         // .requestMatchers("/api/operator/**").hasAnyRole(UserRole.OPERATOR.name(), UserRole.ADMIN.name())
                         // .requestMatchers("/api/user/**").hasAnyRole(UserRole.USER.name(), UserRole.ADMIN.name())
                         .anyRequest().authenticated()

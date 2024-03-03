@@ -1,8 +1,12 @@
 package ru.light.statements.services;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -13,6 +17,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import ru.light.statements.api.DadataAPI;
 import ru.light.statements.dto.CreateStatementDTO;
+import ru.light.statements.dto.UpdateStatementDTO;
 import ru.light.statements.entities.Statement;
 import ru.light.statements.entities.User;
 import ru.light.statements.enums.StatementStatus;
@@ -33,18 +38,17 @@ public class StatementService {
         String phone = dto.getPhone() == null ? user.getPhone() : dto.getPhone();
         String data = dadataAPI.getPhoneData(DadataAPI.dadataToken, DadataAPI.dadataSecret, "[" + phone + "]");
         ObjectMapper mapper = new ObjectMapper();
-        System.out.println(data);
         JsonNode node = mapper.readTree(data.substring(1, data.length() - 1));
         log.info(data.substring(1, data.length() - 1));
-        if (node.get("phone").isEmpty()) {
-            throw new CreateStatementError();
-        }
-
+        // if (node.get("phone").isEmpty()) {
+        //     throw new CreateStatementError();
+        // }
         Statement statement = Statement.builder()
-                                       .title(dto.title)
-                                       .content(dto.content)
-                                       .status(StatementStatus.SEND)
+                                       .title(dto.getTitle())
+                                       .content(dto.getContent())
+                                       .status(StatementStatus.DRAFT)
                                        .sender(user)
+                                       .senderName(dto.getSenderName() != null ? dto.getSenderName() :  user.getFirstName() + " " + user.getLastName())
                                        .created(LocalDateTime.now())
                                        .phone(node.get("phone").asText())
                                        .countryCode(node.get("country_code").asInt())
@@ -54,15 +58,77 @@ public class StatementService {
         statementRepository.save(statement);
     }
 
-    public void update(Statement statement) {
+    public void update(UpdateStatementDTO dto) throws JsonMappingException, JsonProcessingException {
+        Statement statement = statementRepository.findStatementById(dto.getId());
         if (!statement.getStatus().equals(StatementStatus.DRAFT)) {
-            log.error("error while updatint statement " + statement);
+            log.error("error while updating statement " + statement);
             throw new UpdateStatementError();
         }
+        statement.setTitle(dto.getTitle());
+        statement.setContent(dto.getContent());
+        statement.setSenderName(dto.getSenderName());
+        
+        if (dto.getPhone() != null && !statement.getPhone().equals(dto.getPhone())) {
+            String data = dadataAPI.getPhoneData(DadataAPI.dadataToken, DadataAPI.dadataSecret, "[" + dto.getPhone() + "]");
+            ObjectMapper mapper = new ObjectMapper();
+            System.out.println(data);
+            JsonNode node = mapper.readTree(data.substring(1, data.length() - 1));
+            log.info(data.substring(1, data.length() - 1));
+            statement.setPhone(node.get("phone").asText());
+            statement.setCountryCode(node.get("country_code").asInt());
+            statement.setCityCode(node.get("city_code").asInt());
+        }
+        
             
         statementRepository.save(statement);
         log.info("statement " + statement.getId() + " was updated");
     }
     
-    // public List<Statement> getUserStatements
+    public Statement getStatement(Long statementId) {
+        return statementRepository.findStatementById(statementId);
+    }
+    
+    public ArrayList<Statement> getStatementsByUserId(Long userId, 
+                                                      Integer limit, 
+                                                      Integer offset, 
+                                                      Sort.Direction sortDirection,
+                                                      String status) {
+        PageRequest pageRequest = PageRequest.of(offset, limit, Sort.by(sortDirection, "created"));
+        if ("ALL".equals(status)) {
+            return (ArrayList<Statement>) statementRepository.findStatementBySenderId(userId, pageRequest);
+        }
+        return (ArrayList<Statement>) statementRepository.findStatementBySenderIdAndStatus(userId, StatementStatus.valueOf(status), pageRequest);
+    }
+
+    public ArrayList<Statement> getSendStatements(Integer limit, 
+                                                  Integer offset, 
+                                                  Sort.Direction sortDirection) {
+        PageRequest pageRequest = PageRequest.of(offset, limit, Sort.by(sortDirection, "created"));
+        return (ArrayList<Statement>) statementRepository.findStatementByStatus(StatementStatus.SEND, pageRequest);
+    }
+
+    public ArrayList<Statement> getStatements(Integer limit, 
+                                              Integer offset, 
+                                              Sort.Direction sortDirection,
+                                              String status,
+                                              String creatorNamePart) {
+        PageRequest pageRequest = PageRequest.of(offset, limit, Sort.by(sortDirection, "created"));
+        log.info(creatorNamePart);
+        if ("ALL".equals(status)) {
+            return (ArrayList<Statement>) statementRepository.findStatementBySenderNameLike("%" + creatorNamePart + "%", pageRequest);
+        }
+        return (ArrayList<Statement>) statementRepository.findStatementByStatusAndSenderNameLike(StatementStatus.valueOf(status), "%" + creatorNamePart + "%", pageRequest);
+    }
+
+    public Statement changeStatus(Long statementId, StatementStatus newStatus) {
+        Statement statement = statementRepository.findStatementById(statementId);
+        statement.setStatus(newStatus);
+        if (newStatus.equals(StatementStatus.ACCEPTED) || newStatus.equals(StatementStatus.REJECTED)) {
+            statement.setClosed(LocalDateTime.now());
+        }
+        statementRepository.save(statement);
+        log.info("statement " + statement.getId() + " changed to " + newStatus.name());
+        return statement;
+    }
+
 }

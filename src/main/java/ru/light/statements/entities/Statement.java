@@ -2,6 +2,9 @@ package ru.light.statements.entities;
 
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -22,6 +25,7 @@ import ru.light.statements.enums.StatementStatus;
 @Data
 @Builder
 @Table(name = "statements")
+@JsonInclude(JsonInclude.Include.NON_NULL)
 @AllArgsConstructor
 @NoArgsConstructor
 public class Statement {
@@ -33,6 +37,7 @@ public class Statement {
     private String content;
     @Enumerated(EnumType.STRING)
     private StatementStatus status;
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "sender_id")
     private User sender;

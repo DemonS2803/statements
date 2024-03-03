@@ -9,9 +9,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class CreateStatementDTO {
 
-    public String title;
-    public String content;
-    public String senderName;
-    public String phone;
+    private String title;
+    private String content;
+    private String senderName;
+    private String phone;
     
 }

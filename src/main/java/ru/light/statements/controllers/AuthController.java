@@ -2,7 +2,6 @@ package ru.light.statements.controllers;
 
 import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
-import java.security.DrbgParameters.Reseed;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,12 +12,12 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -52,7 +51,7 @@ public class AuthController {
         try {
             User user = userService.getUserByLogin(loginRequest.getLogin());
 
-            Authentication authentication = authenticateUser(loginRequest.getLogin(), DigestUtils.sha256Hex(loginRequest.getPassword()));
+            authenticateUser(loginRequest.getLogin(), DigestUtils.sha256Hex(loginRequest.getPassword()));
             String accessJwt = jwtUtils.generateJwtToken(user, accessTokenExpirationTime);
             String refreshJwt = jwtUtils.generateJwtToken(user, refreshTokenExpirationTime);
             userService.updateUserRefreshToken(user, refreshJwt);
@@ -62,7 +61,7 @@ public class AuthController {
 
         } catch (Exception e) { 
             log.warn("invalid login with credentials: " + loginRequest, e);
-            return new ResponseEntity(HttpStatus.UNAUTHORIZED);
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         }
     }
 
@@ -74,8 +73,8 @@ public class AuthController {
     }
 
     @PutMapping("/refresh_token")
-    public ResponseEntity<?> refreshToken(@RequestHeader("Authorization") String token) {
-        User user = userService.getUserFromToken(token);
+    public ResponseEntity<?> refreshToken() {
+        User user = userService.getUserByLogin(((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername());
         
         if (jwtUtils.validateJwtToken(user.getRefreshToken())) {
             log.info(user.getLogin() + " successfully refreshed token");
@@ -84,12 +83,12 @@ public class AuthController {
         }
 
         log.warn("refresh token has expired");
-        return new ResponseEntity(HttpStatus.UNAUTHORIZED);
+        return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
     }
     
     @PostMapping("/logout")
-    public ResponseEntity<?> logout(@RequestHeader("Authorization") String token) {
-        User user = userService.getUserFromToken(token);
+    public ResponseEntity<?> logout() {
+        User user = userService.getUserByLogin(((UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getUsername());
         user.setRefreshToken("");
         userService.saveUser(user);
         log.info("user " + user.getLogin() + " logged out");
